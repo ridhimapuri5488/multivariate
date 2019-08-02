@@ -1,0 +1,4 @@
+Hi this is my first file.
+
+
+I am learnning git now. Please forgive me IF I make some silly mistakes.
