@@ -1,0 +1,80 @@
+---
+title: "final_multi"
+date: "February 16, 2019"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+library(dplyr)
+
+df = read_csv("flights_clean.csv")
+summary(df)
+str(df)
+names(df)
+df = df[, -(1)]
+#summary(df)
+#df.AIRLINE = as.factor(df$AIRLINE)
+#df.ORIGIN_AIRPORT = as.factor(df$ORIGIN_AIRPORT)
+#df.DESTINATION_AIRPORT = as.factor(df$DESTINATION_AIRPORT)
+#df.AIRLINE = as.factor(df$AIRLINE)
+
+df_factor <- df %>% mutate_if(sapply(df, is.character), as.factor)
+
+str(df_factor)
+#plot(df_factor)
+#cor(df_factor)
+#pairs(df_factor)
+library(rpart)
+library(rpart.plot)
+
+set.seed(2578)
+names(df)
+#cols = c(2,3)
+new_df = df[, -c(2,3,10,11)]
+spl = sample(nrow(new_df),0.75*nrow(new_df))
+head(spl)
+
+# Now we can split our dataset:
+train.dat = new_df[spl,]
+test.dat = new_df[-spl,]
+#summary(train.dat)
+
+tree1 = rpart(ARRIVAL_DELAY ~ . , data = train.dat, method = "anova", minbucket = 10, cp = 0.0048)
+#summary(tree1)
+rpart.plot(tree1, extra=1)
+
+prp(tree1)
+
+plotcp(tree1)
+
+printcp(tree1)
+
+finalTree = tree1
+pred = predict(finalTree, newdata = test.dat)
+dat_ys = data.frame(y = test.dat$ARRIVAL_DELAY, ypred = pred)
+head(dat_ys,10)
+
+
+mean_arrival_delay = mean(train.dat$ARRIVAL_DELAY)
+SSE = sum((dat_ys$y - dat_ys$ypred)^2)
+SST = sum((dat_ys$y - mean_arrival_delay)^2)
+OSR2 = 1 - SSE/SST
+OSR2
+MAE = mean(abs(dat_ys$y - dat_ys$ypred))
+MAE
+
+names(train.dat)
+lin_all=lm(ARRIVAL_DELAY ~ ., data=train.dat)
+summary(lin_all)
+
+test.dat$pred = predict(lin_all, newdata=test.dat)
+head(test.dat)
+SSE = sum((test.dat$pred - test.dat$ARRIVAL_DELAY)^2)
+SSE
+train.mean = mean(train.dat$ARRIVAL_DELAY)
+SST = sum((train.mean - test.dat$ARRIVAL_DELAY)^2)
+SST
+1 - SSE/SST
+```
